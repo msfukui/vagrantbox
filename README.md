@@ -16,10 +16,14 @@ vagrant on VirtualBox を開発環境として使う人のための vagrant box 
 
 * Scientific Linux 6.5
 
-作成環境: vagrant 1.6.2/VirtualBox 4.3.12
-作成日  : 2013/11/25
-作成日  : 2014/10/05
-設定内容: boot disk/text mode install, TZ: Asia/Tokyo, SELinux: Off
-設定方法の詳細はメモ(scientificlinux.txt)を参照してください。
+  作成環境: vagrant 1.6.2/VirtualBox 4.3.12
+
+  作成日  : 2013/11/25
+
+  作成日  : 2014/10/05
+
+  設定内容: boot disk/text mode install, TZ: Asia/Tokyo, SELinux: Off
+
+  設定方法の詳細はメモ(scientificlinux.txt)を参照してください。
 
 [EOF]
