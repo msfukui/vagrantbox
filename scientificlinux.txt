@@ -1,0 +1,111 @@
+※How to Create Vagrant BOX image(Scientific Linux 6.4) for VirtualBOX memo
+
+vagrant 1.3.5
+VirtualBox 4.2.18
+
+c.f. http://d.hatena.ne.jp/okinaka/20110805/1312474847
+c.f. http://qiita.com/tukiyo/items/d4d666959808b1794a3e#1-1
+c.f. http://www.oss-note.com/centos/centos62/guestadditions/
+
+■GuestOS
+
+・ScientificLinux6.4 boot disk/text mode install
+
+・japanese/utf-8/asia/tokyo
+
+・yum update(2013/11/25) & reboot
+
+・selinux disable
+   $ vim /etc/selinux/config
+   ...
+   SELINUX=disabled
+   ...
+
+・yum install gcc make kernel-devel autoconf automake
+・yum install openssh-clients
+
+・install VBoxLinuxAdditions
+   Choice [Device]-[Install Gest Additions].
+   $ mount /dev/cdrom /mnt
+   $ sh /mnt/VBoxLinuxAdditions.run
+   ...Install the Windows System driver [FAILED] -> OK.
+
+・create vagrant user & ssh settings
+  $ adduser vagrant
+  $ passwd vagrant -> passowrd: vagrant
+  $ gpasswd -a vagrant wheel
+  $ mkdir /home/vagrant/.ssh
+  $ chmod 700 /home/vagrant/.ssh
+  $ cd /home/vagrant/.ssh
+  $ curl 'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' > authorized_keys
+  $ chown -R vagrant:vagrant /home/vagrant/.ssh
+  # passwd -> passowrd: vagrant
+
+・sudo setting
+  # visudo
+  ...
+  #Defaults requiretty <- comment out.
+  ...
+  vagrant ALL=(ALL) NOPASSWD;ALL <- add.
+  ...
+
+・sshd configuration.
+  $ vim /etc/ssh/sshd_config
+  ...
+  UseDNS no  <- add.
+  ...
+
+・delete yum components.
+ $ yum remove gcc automake autoconf make kernel-devel
+ ※yum install の順番によっては make は remove に失敗するかも。
+# $ yum remove xorg-x11-drv-ati-firmware yum-autoupdate
+# $ yum remove kernel-古いバージョン
+# $ yum clear all
+
+・delete autosave the MAC address.
+  $ rm /etc/udev/rules.d/70-persistent-net.rules
+  $ ln -s -f /dev/null /etc/udev/rules.d/70-persistent-net.rules
+
+・VM compactation.
+  $ dd if=/dev/zero of=/EMPTY bs=1M
+  $ rm /EMPTY
+
+・delete dhcpclient leases files.
+  $ rm /var/lib/dhclient/*
+
+・delete command hitsory.
+  # history -c
+
+・shutdown
+  [ファイル]-[閉じる] : 電源オフ
+  or
+	$ sync; sync; sync
+	$ shutdown -h now
+
+■HostOS
+
+・create package file.
+  $ mkdir -p ~/vagrant/box; cd ~/vagrant/box
+  $ vagrant package --base scientificlinux64 --output scientificlinux65.box
+  $ ls -l
+  合計 388836
+  -rwxr-x--- 1 xxxxxxxx 11月 25 18:27 scientificlinux65.box*
+
+・box add
+  $ vagrant box add scientificlinux6.5 scientificlinux65.box
+  $ vagrant box list
+  centos5.9          (virtualbox)
+  centos5.9-chef     (virtualbox)
+  scientificlinux6.5 (virtualbox)
+
+・init & up
+  $ mkdir -p ~/vagrant/scientificlinux6.5; cd ~/vagrant/scientificlinux6.5
+  $ vagrant init scientificlinux6.5
+  $ vim Vagrantfile
+  ..
+  config.vm.network :forwarded_port, guest: 22, host: 10024  <- add port-forwarding
+  config.vm.network :forwarded_port, guest: 3000, host: 3001 <- add port-forwarding
+  ..
+  config.vm.network :private_network, ip: "192.168.33.12" <- add
+  ..
+[EOF]
